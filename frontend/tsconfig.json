@@ -20,7 +20,8 @@
       "@pages/*": ["pages/*"],
       "@types/*": ["types/*"],
       "@api/*": ["api/*"]
-    }
+    },
+    "types": ["node", "react", "react-dom"]
   },
   "include": ["src"],
   "exclude": ["node_modules"]
