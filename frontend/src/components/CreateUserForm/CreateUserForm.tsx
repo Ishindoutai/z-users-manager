@@ -1,8 +1,9 @@
 import React from 'react';
 import { Form, Input, Button, Select, message } from 'antd';
+import type { Rule } from 'antd/es/form';
 import { UserCreateData } from '../../types/user';
 import { createUser } from '../../api/usersApi';
-import validationSchema from './validationSchema';
+import { validationSchema } from './validationSchema';
 
 const { Option } = Select;
 
@@ -21,8 +22,12 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
       message.success('User created successfully');
       form.resetFields();
       onSuccess();
-    } catch (error) {
-      message.error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        message.error(error.message);
+      } else {
+        message.error('An unknown error occurred');
+      }
     } finally {
       setLoading(false);
     }
