@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Form, Input, Button, Select, message } from 'antd';
 import type { Rule } from 'antd/es/form';
 import { UserCreateData } from '../../types/user';
@@ -13,7 +13,7 @@ interface CreateUserFormProps {
 
 const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
   const [form] = Form.useForm();
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(false);
 
   const onFinish = async (values: UserCreateData) => {
     setLoading(true);
