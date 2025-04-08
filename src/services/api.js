@@ -1,24 +1,25 @@
-const API_URL = 'https://us-central1-SEU_PROJETO.cloudfunctions.net/api';
+// frontend/src/services/api.js
+import { db } from '../firebase';
+import { collection, getDocs, addDoc, doc, updateDoc } from 'firebase/firestore';
+
+const usersCollection = collection(db, 'users');
 
 export const getUsers = async () => {
-  const response = await fetch(`${API_URL}/users`);
-  return response.json();
+  const snapshot = await getDocs(usersCollection);
+  return snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
 };
 
 export const createUser = async (userData) => {
-  const response = await fetch(`${API_URL}/users`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData)
+  const docRef = await addDoc(usersCollection, {
+    email: userData.email,
+    password: userData.password,
+    role: userData.role || 'user',
+    createdAt: new Date()
   });
-  return response.json();
+  return { uid: docRef.id, ...userData };
 };
 
 export const updateUser = async (uid, userData) => {
-  const response = await fetch(`${API_URL}/users/${uid}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData)
-  });
-  return response.json();
+  await updateDoc(doc(db, 'users', uid), userData);
+  return { uid, ...userData };
 };

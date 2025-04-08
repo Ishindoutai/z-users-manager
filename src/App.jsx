@@ -19,7 +19,8 @@ const UsersManager = () => {
       const data = await getUsers();
       setUsers(data);
     } catch (error) {
-      message.error('Falha ao carregar usuários');
+      message.error(error.message || 'Falha ao carregar usuários');
+      console.error('Error fetching users:', error);
     }
   };
 
@@ -42,7 +43,7 @@ const UsersManager = () => {
       message.success('Usuário atualizado com sucesso');
       fetchUsers();
     } catch (error) {
-      message.error('Erro ao atualizar usuário');
+      message.error(error.message || 'Erro ao atualizar usuário');
     }
   };
 
