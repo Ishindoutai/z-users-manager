@@ -10,9 +10,8 @@ export interface UserUpdateData {
   permissions?: string[];
 }
 
-export interface User {
+export interface User extends UserCreateData {
   uid: string;
-  email: string;
-  permissions: string[];
   createdAt?: admin.firestore.Timestamp;
+  updatedAt?: admin.firestore.Timestamp;
 }

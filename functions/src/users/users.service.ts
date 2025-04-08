@@ -35,8 +35,21 @@ export const getUsers = async () => {
 };
 
 export const updateUser = async (uid: string, userData: UserUpdateData) => {
-  await db.collection('users').doc(uid).update(userData);
+  // Definindo o tipo de dados que será atualizado
+  type UserFirestoreData = {
+    permissions?: string[];
+    updatedAt: admin.firestore.FieldValue;
+  };
+
+  // Criando o objeto de atualização com tipo explícito
+  const updateData: admin.firestore.UpdateData<UserFirestoreData> = {
+    permissions: userData.permissions,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+  
+  await db.collection('users').doc(uid).update(updateData);
   const updatedDoc = await db.collection('users').doc(uid).get();
+  
   return {
     uid,
     ...updatedDoc.data(),
