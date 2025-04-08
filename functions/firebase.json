@@ -1,7 +1,7 @@
 {
   "functions": {
     "predeploy": "npm run build",
-    "source": "functions",
+    "source": ".",
     "runtime": "nodejs16"
   },
   "emulators": {

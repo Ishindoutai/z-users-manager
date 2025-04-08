@@ -1,17 +1,38 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { handleCreateUser, handleGetUsers, handleUpdateUser } from './users/users.controller';
-import express from 'express';
-import cors from 'cors';
 
 admin.initializeApp();
 
-const app = express();
-app.use(cors({ origin: true }));
+// Middleware CORS
+const corsHandler = async (req: functions.https.Request, res: functions.Response, handler: Function) => {
+  // Configuração CORS
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
 
-// Users endpoints
-app.post('/createUser', handleCreateUser);
-app.get('/getUsers', handleGetUsers);
-app.post('/updateUser/:uid', handleUpdateUser);
+  // Responde imediatamente para requisições OPTIONS
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
 
-export const api = functions.https.onRequest(app);
+  try {
+    await handler(req, res);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const createUser = functions.https.onRequest((req, res) => 
+  corsHandler(req, res, handleCreateUser)
+);
+
+export const getUsers = functions.https.onRequest((req, res) => 
+  corsHandler(req, res, handleGetUsers)
+);
+
+export const updateUser = functions.https.onRequest((req, res) => 
+  corsHandler(req, res, handleUpdateUser)
+);

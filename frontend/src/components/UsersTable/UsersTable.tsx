@@ -63,7 +63,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => 
       render: (_: unknown, record: User) => {
         const editable = isEditing(record);
         return editable ? (
-          <span>
+          <>
             <Button
               onClick={() => save(record.uid, record.permissions)}
               style={{ marginRight: 8 }}
@@ -75,7 +75,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => 
             <Popconfirm title="Cancel editing?" onConfirm={cancel}>
               <Button size="small">Cancel</Button>
             </Popconfirm>
-          </span>
+          </>
         ) : (
           <Button 
             disabled={editingKey !== ''} 

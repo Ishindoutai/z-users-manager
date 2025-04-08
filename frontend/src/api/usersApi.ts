@@ -1,6 +1,11 @@
 import { User, UserCreateData } from '../types/user';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/your-project/us-central1/api';
+// Configuração dinâmica para ambiente de desenvolvimento/produção
+//${process.env.REACT_APP_FIREBASE_PROJECT_ID}/us-central1
+const API_BASE_URL = process.env.NODE_ENV === 'development'
+  ? `http://127.0.0.1:5001`
+  : process.env.REACT_APP_API_BASE_URL || 
+    `https://us-central1-${process.env.REACT_APP_FIREBASE_PROJECT_ID}.cloudfunctions.net`;
 
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
