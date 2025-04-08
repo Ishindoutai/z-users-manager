@@ -31,7 +31,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => 
       message.success('User updated successfully');
       setEditingKey('');
       onUpdate();
-    } catch (err) {
+    } catch (err: unknown) {
       message.error('Error updating user');
       console.error('Error updating user:', err);
     }
@@ -60,7 +60,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => 
     {
       title: 'Actions',
       dataIndex: 'actions',
-      render: (_: any, record: User) => {
+      render: (_: unknown, record: User) => {
         const editable = isEditing(record);
         return editable ? (
           <span>
