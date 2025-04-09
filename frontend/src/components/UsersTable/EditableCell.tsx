@@ -20,15 +20,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
     'reports',
   ];
 
-  const inputNode = (
-    <Select mode="multiple" style={{ width: '100%' }} defaultValue={record.permissions}>
-      {permissionOptions.map(perm => (
-        <Option key={perm} value={perm}>
-          {perm}
-        </Option>
-      ))}
-    </Select>
-  );
+  const permissions = record?.permissions || [];
 
   return (
     <td {...restProps}>
@@ -36,6 +28,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
         <Form.Item
           name={dataIndex}
           style={{ margin: 0 }}
+          initialValue={permissions}
           rules={[
             {
               required: true,
@@ -51,7 +44,13 @@ const EditableCell: React.FC<EditableCellProps> = ({
             },
           ]}
         >
-          {inputNode}
+          <Select mode="multiple" style={{ width: '100%' }}>
+            {permissionOptions.map(perm => (
+              <Option key={perm} value={perm}>
+                {perm}
+              </Option>
+            ))}
+          </Select>
         </Form.Item>
       ) : (
         children

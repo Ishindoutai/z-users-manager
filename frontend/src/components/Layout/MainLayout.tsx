@@ -9,21 +9,36 @@ interface MainLayoutProps {
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+  // Menu items configuration
+  const menuItems = [
+    {
+      key: '1',
+      label: <Link to="/">Users Manager</Link>,
+    }
+  ];
+
+  // Breadcrumb items configuration
+  const breadcrumbItems = [
+    { title: 'Home' },
+    { title: 'Users' },
+  ];
+
   return (
     <Layout className="layout">
       <Header>
         <div className="logo" />
-        <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['1']}>
-          <Menu.Item key="1">
-            <Link to="/">Users Manager</Link>
-          </Menu.Item>
-        </Menu>
+        <Menu 
+          theme="dark" 
+          mode="horizontal" 
+          defaultSelectedKeys={['1']}
+          items={menuItems}
+        />
       </Header>
       <Content style={{ padding: '0 50px' }}>
-        <Breadcrumb style={{ margin: '16px 0' }}>
-          <Breadcrumb.Item>Home</Breadcrumb.Item>
-          <Breadcrumb.Item>Users</Breadcrumb.Item>
-        </Breadcrumb>
+        <Breadcrumb 
+          style={{ margin: '16px 0' }}
+          items={breadcrumbItems}
+        />
         <div className="site-layout-content">
           {children}
         </div>

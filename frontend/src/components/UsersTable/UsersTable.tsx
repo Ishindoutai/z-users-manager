@@ -49,13 +49,13 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => 
       dataIndex: 'permissions',
       key: 'permissions',
       editable: true,
-      render: (permissions: string[]) => permissions.join(', '),
+      render: (permissions: string[] = []) => permissions.join(', '),
     },
     {
       title: 'Created At',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleString(),
+      render: (date: string) => date ? new Date(date).toLocaleString() : '',
     },
     {
       title: 'Actions',
@@ -65,7 +65,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => 
         return editable ? (
           <>
             <Button
-              onClick={() => save(record.uid, record.permissions)}
+              onClick={() => save(record.uid, record.permissions || [])}
               style={{ marginRight: 8 }}
               size="small"
               type="primary"
@@ -97,7 +97,6 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => 
       ...col,
       onCell: (record: User) => ({
         record,
-        inputType: 'text',
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
