@@ -48,4 +48,12 @@ const api = {
   },
 };
 
+export const getUsersCount = async () => {
+  const response = await fetch(`${API_BASE_URL}/users/stats`);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return await response.json();
+};
+
 export default api;
