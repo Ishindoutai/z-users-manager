@@ -1,5 +1,3 @@
-import * as admin from 'firebase-admin';
-
 export interface UserCreateRequest {
   email: string;
   password: string;
@@ -15,15 +13,4 @@ export interface UserResponse {
   uid: string;
   email: string;
   permissions: string[];
-  createdAt: admin.firestore.Timestamp;
-  updatedAt?: admin.firestore.Timestamp;
-}
-
-export interface AuthContext {
-  auth?: {
-    uid: string;
-    token: {
-      [key: string]: any;
-    };
-  };
 }

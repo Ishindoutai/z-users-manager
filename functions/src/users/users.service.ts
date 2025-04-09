@@ -5,28 +5,22 @@ const db = admin.firestore();
 
 export const UsersService = {
   async createUser(userData: UserCreateRequest): Promise<UserResponse> {
-    return await db.runTransaction(async (transaction) => {
-      const userRef = db.collection('users').doc();
-      
-      const userRecord = await admin.auth().createUser({
-        email: userData.email,
-        password: userData.password,
-        uid: userRef.id
-      });
-
-      const userDoc: Omit<UserResponse, 'uid'> = {
-        email: userData.email,
-        permissions: userData.permissions,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      };
-
-      await transaction.set(userRef, userDoc);
-      
-      return {
-        uid: userRecord.uid,
-        ...userDoc
-      };
+    const userRecord = await admin.auth().createUser({
+      email: userData.email,
+      password: userData.password
     });
+
+    const userDoc = {
+      email: userData.email,
+      permissions: userData.permissions
+    };
+
+    await db.collection('users').doc(userRecord.uid).set(userDoc);
+    
+    return {
+      uid: userRecord.uid,
+      ...userDoc
+    };
   },
 
   async getUsers(): Promise<UserResponse[]> {
@@ -38,26 +32,22 @@ export const UsersService = {
   },
 
   async updateUser(data: UserUpdateRequest): Promise<UserResponse> {
-    return await db.runTransaction(async (transaction) => {
-      const userRef = db.collection('users').doc(data.uid);
-      const doc = await transaction.get(userRef);
+    const userRef = db.collection('users').doc(data.uid);
+    const doc = await userRef.get();
 
-      if (!doc.exists) {
-        throw new Error('User not found');
-      }
+    if (!doc.exists) {
+      throw new Error('User not found');
+    }
 
-      const updateData = {
-        permissions: data.permissions,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      };
-
-      await transaction.update(userRef, updateData);
-      
-      return {
-        uid: data.uid,
-        ...doc.data(),
-        ...updateData
-      } as UserResponse;
+    await userRef.update({
+      permissions: data.permissions
     });
+
+    const updatedDoc = await userRef.get();
+    
+    return {
+      uid: data.uid,
+      ...updatedDoc.data()
+    } as UserResponse;
   }
 };

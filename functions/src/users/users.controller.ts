@@ -18,10 +18,6 @@ export const userCreateCallable = functions.https.onCall(async (data: UserCreate
       throw new functions.https.HttpsError('invalid-argument', 'All fields are required');
     }
 
-    if (!Array.isArray(data.permissions)) {
-      throw new functions.https.HttpsError('invalid-argument', 'Permissions must be an array');
-    }
-
     return await UsersService.createUser(data);
   } catch (error) {
     return handleError(error);
