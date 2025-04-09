@@ -12,18 +12,24 @@ initializeApp();
 exports.createUser = onRequest(async (req, res) => {
   const { email, password, permissions } = req.query.data;
 
-  const writeResult = await getFirestore()
-                            .collection("users")
-                            .add({email: email, password: password, permissions: permissions})
+  const writeResult = await getFirestore().collection("users").add({email: email, password: password, permissions: permissions});
   
-  res.json({result: `User with ID: ${writeResult.id} created.`})
+  res.json({result: `User with ID: ${writeResult.id} created.`});
 
 });
 
-exports.getUserList = onRequest(async (req, res) => {
-  const userList = await getFirestore().collection("users").get()
+exports.getUserById = onRequest(async (req, res) => {
+  const { userId } = req.query.params;
 
-  res.json({userList: userList})
+  const user = await getFirestore().collection.get(userId);
+
+  res.json({ user: user });
+});
+
+exports.getUserList = onRequest(async (req, res) => {
+  const userList = await getFirestore().collection("users").get();
+
+  res.json({userList: userList});
 });
 
 // Take the text parameter passed to this HTTP endpoint and insert it into
