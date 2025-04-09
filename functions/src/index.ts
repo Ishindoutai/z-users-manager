@@ -1,24 +1,23 @@
 import * as admin from 'firebase-admin';
-import {
-  userCreateCallable,
-  userListCallable,
-  userUpdateCallable,
-  userCreateHttp,
-  userListHttp,
-  userUpdateHttp
-} from './users/users.controller';
+import * as functions from 'firebase-functions';
+import { userCreateCallable, userListCallable, userUpdateCallable } from './users/users.controller';
 
 admin.initializeApp();
 
-// Exporta ambas as versões (Callable e HTTP)
-exports = module.exports = {
-  // Versão Callable (recomendada)
+export const api = {
+  // Callable Functions
   userCreate: userCreateCallable,
   userList: userListCallable,
   userUpdate: userUpdateCallable,
 
-  // Versão HTTP (para compatibilidade)
-  userCreateHttp,
-  userListHttp,
-  userUpdateHttp
+  // HTTP Functions (opcional)
+  userCreateHttp: functions.https.onRequest(async (req, res) => {
+    try {
+      const data = req.method === 'GET' ? req.query : req.body;
+      const result = await userCreateCallable(data, { auth: req.headers.authorization ? { uid: '' } : null } as any);
+      res.status(200).json({ data: result });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  })
 };
