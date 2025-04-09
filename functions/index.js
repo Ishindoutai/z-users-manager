@@ -13,22 +13,68 @@ initializeApp();
 
 const db = getFirestore();
 
-// exports.createUser = onRequest(async (req, res) => {
-//   const { email, password, permissions } = req.query.data;
+// Função auxiliar para hash de senha (simplificada)
+async function hashPassword(password) {
+  // Na prática, use bcrypt ou similar
+  const crypto = require('crypto');
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
 
-//   const writeResult = await getFirestore().collection("users").add({email: email, password: password, permissions: permissions});
-  
-//   res.json({result: `User with ID: ${writeResult.id} created.`});
+exports.createUser = onRequest(async (req, res) => {
+  try {
+    // Verifica o método HTTP
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-// });
+    // Valida os dados de entrada
+    const { email, password, permissions = [] } = req.body;
 
-// exports.getUserById = onRequest(async (req, res) => {
-//   const { userId } = req.query.params;
+    if (!email || !password) {
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        details: 'Email and password are required' 
+      });
+    }
 
-//   const user = await getFirestore().collection.get(userId);
+    // Cria o objeto de usuário
+    const userData = {
+      email,
+      password: await hashPassword(password), // Sempre hash a senha!
+      permissions,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
 
-//   res.json({ user: user });
-// });
+    // Adiciona ao Firestore
+    const db = getFirestore();
+    const writeResult = await db.collection("users").add(userData);
+    
+    // Retorna resposta de sucesso
+    res.status(201).json({
+      success: true,
+      message: `User created successfully`,
+      userId: writeResult.id,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create user',
+      details: error.message
+    });
+  }
+});
+
+exports.getUserById = onRequest(async (req, res) => {
+  const { userId } = req.query.params;
+
+  const user = await getFirestore().collection.get(userId);
+
+  res.json({ user: user });
+});
 
 exports.getUserList = onRequest(async (req, res) => {
   try {
