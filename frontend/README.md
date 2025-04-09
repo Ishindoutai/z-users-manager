@@ -9,9 +9,12 @@ A complete user management system with permissions built with React and Firebase
 - Edit permissions inline
 - Form validation
 - Real-time updates
+- Responsive design with Ant Design
+- Secure authentication
 
 ## Setup
 
-1. Install dependencies:
+1. Clone the repository
+2. Install dependencies:
 ```bash
 npm install

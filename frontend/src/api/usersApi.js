@@ -1,10 +1,8 @@
-import { User, UserCreateData } from '../types/user';
-
 const API_BASE_URL = process.env.NODE_ENV === 'development'
-  ? `http://127.0.0.1:5001/z-users-manager/us-central1`
-  : `https://southamerica-east1-z-users-manager.cloudfunctions.net`;
+  ? 'http://127.0.0.1:5001/z-users-manager/us-central1'
+  : 'https://southamerica-east1-z-users-manager.cloudfunctions.net';
 
-const handleResponse = async <T>(response: Response): Promise<T> => {
+const handleResponse = async (response) => {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || `Request failed with status ${response.status}`);
@@ -12,7 +10,7 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
   return response.json();
 };
 
-const apiRequest = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
+const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   const response = await fetch(url, {
     ...options,
@@ -21,13 +19,13 @@ const apiRequest = async <T>(endpoint: string, options: RequestInit = {}): Promi
       ...options.headers,
     },
   });
-  return handleResponse<T>(response);
+  return handleResponse(response);
 };
 
 export const UsersApi = {
-  async fetchAll(): Promise<User[]> {
+  async fetchAll() {
     try {
-      const data = await apiRequest<User[]>('/getUsers');
+      const data = await apiRequest('/getUsers');
       return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -35,10 +33,10 @@ export const UsersApi = {
     }
   },
 
-  async create(userData: UserCreateData): Promise<User> {
+  async create(userData) {
     try {
       const { email, password, permissions = [] } = userData;
-      return await apiRequest<User>('/createUser', {
+      return await apiRequest('/createUser', {
         method: 'POST',
         body: JSON.stringify({ email, password, permissions }),
       });
@@ -48,12 +46,12 @@ export const UsersApi = {
     }
   },
 
-  async update(uid: string, permissions: string[]): Promise<User> {
+  async update(uid, permissions) {
     try {
       if (!uid) throw new Error('User ID is required');
       if (!Array.isArray(permissions)) throw new Error('Permissions must be an array');
       
-      return await apiRequest<User>(`/updateUser/${uid}`, {
+      return await apiRequest(`/updateUser/${uid}`, {
         method: 'POST',
         body: JSON.stringify({ permissions }),
       });

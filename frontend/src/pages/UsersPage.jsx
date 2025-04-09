@@ -6,8 +6,8 @@ import { fetchUsers } from '../api/usersApi';
 
 const { Title } = Typography;
 
-const UsersPage: React.FC = () => {
-  const [users, setUsers] = useState<any[]>([]);
+const UsersPage = () => {
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const getUsers = async () => {
