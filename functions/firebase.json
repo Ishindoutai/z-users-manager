@@ -2,14 +2,21 @@
   "functions": {
     "predeploy": "npm run build",
     "source": ".",
-    "runtime": "nodejs16"
+    "runtime": "nodejs18"
   },
   "emulators": {
     "functions": {
       "port": 5001
     },
     "ui": {
-      "enabled": true
+      "enabled": true,
+      "port": 4000
+    },
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
     }
   }
 }
