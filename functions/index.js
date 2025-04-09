@@ -94,6 +94,59 @@ exports.getUser = onRequest(async (req, res) => {
   }
 });
 
+// STATS - Get users statistics
+exports.getUsersStats = onRequest(async (req, res) => {
+  try {
+    // Validate request method
+    if (req.method !== "GET") {
+      return res.status(405).json({ error: "Method Not Allowed" });
+    }
+
+    // Get all users count
+    const allUsersQuery = db.collection("users");
+    const allUsersSnapshot = await allUsersQuery.count().get();
+    const totalUsers = allUsersSnapshot.data().count;
+
+    // Get active users count (assuming we have an 'active' field)
+    const activeUsersQuery = db.collection("users").where("active", "==", true);
+    const activeUsersSnapshot = await activeUsersQuery.count().get();
+    const activeUsers = activeUsersSnapshot.data().count;
+
+    // Get admin users count (users with 'admin' permission)
+    const adminUsersQuery = db.collection("users").where("permissions", "array-contains", "admin");
+    const adminUsersSnapshot = await adminUsersQuery.count().get();
+    const adminUsers = adminUsersSnapshot.data().count;
+
+    // Get recently created users (last 7 days)
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    const recentUsersQuery = db.collection("users")
+      .where("createdAt", ">", oneWeekAgo.toISOString())
+      .orderBy("createdAt", "desc")
+      .limit(5);
+    
+    const recentUsersSnapshot = await recentUsersQuery.get();
+    const recentUsers = recentUsersSnapshot.docs.map(doc => ({
+      id: doc.id,
+      email: doc.data().email,
+      createdAt: doc.data().createdAt
+    }));
+
+    // Return statistics
+    res.status(200).json({
+      totalUsers,
+      activeUsers,
+      adminUsers,
+      recentUsers,
+      lastUpdated: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    handleError(res, error, "Failed to fetch user statistics");
+  }
+});
+
 // UPDATE - Modify user
 exports.updateUser = onRequest(async (req, res) => {
   try {
