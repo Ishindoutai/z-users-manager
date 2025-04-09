@@ -7,7 +7,7 @@ import './App.css';
 
 const { Content } = Layout;
 
-const App: React.FC = () => {
+const App = () => {
   return (
     <AntApp>
       <MainLayout>

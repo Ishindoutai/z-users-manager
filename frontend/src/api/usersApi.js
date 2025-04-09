@@ -3,11 +3,11 @@ const API_BASE_URL = process.env.NODE_ENV === 'development'
   : 'https://southamerica-east1-z-users-manager.cloudfunctions.net';
 
 const handleResponse = async (response) => {
+  const data = await response.json();
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Request failed with status ${response.status}`);
+    throw new Error(data.message || `Request failed with status ${response.status}`);
   }
-  return response.json();
+  return data;
 };
 
 const apiRequest = async (endpoint, options = {}) => {
@@ -25,7 +25,7 @@ const apiRequest = async (endpoint, options = {}) => {
 export const UsersApi = {
   async fetchAll() {
     try {
-      const data = await apiRequest('/getUsers');
+      const data = await apiRequest('/userList');
       return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -36,7 +36,7 @@ export const UsersApi = {
   async create(userData) {
     try {
       const { email, password, permissions = [] } = userData;
-      return await apiRequest('/createUser', {
+      return await apiRequest('/userCreate', {
         method: 'POST',
         body: JSON.stringify({ email, password, permissions }),
       });
@@ -51,8 +51,8 @@ export const UsersApi = {
       if (!uid) throw new Error('User ID is required');
       if (!Array.isArray(permissions)) throw new Error('Permissions must be an array');
       
-      return await apiRequest(`/updateUser/${uid}`, {
-        method: 'POST',
+      return await apiRequest(`/userUpdate/${uid}`, {
+        method: 'PATCH',
         body: JSON.stringify({ permissions }),
       });
     } catch (error) {

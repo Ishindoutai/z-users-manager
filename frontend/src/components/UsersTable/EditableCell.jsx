@@ -1,6 +1,5 @@
 import React from 'react';
 import { Form, Select } from 'antd';
-import { User } from '../../types/user';
 
 const { Option } = Select;
 
