@@ -69,11 +69,52 @@ exports.createUser = onRequest(async (req, res) => {
 });
 
 exports.getUserById = onRequest(async (req, res) => {
-  const { userId } = req.query.params;
+  try {
+    // Verifica o método HTTP
+    if (req.method !== 'GET') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-  const user = await getFirestore().collection.get(userId);
+    // Obtém o ID do usuário
+    const userId = req.query.userId || req.params.userId;
+    
+    if (!userId) {
+      return res.status(400).json({ 
+        error: 'User ID is required' 
+      });
+    }
 
-  res.json({ user: user });
+    // Busca no Firestore
+    const db = getFirestore();
+    const userRef = db.collection("users").doc(userId);
+    const doc = await userRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ 
+        error: 'User not found' 
+      });
+    }
+
+    // Retorna os dados (excluindo a senha por segurança)
+    const userData = doc.data();
+    delete userData.password;
+
+    res.status(200).json({
+      success: true,
+      user: {
+        id: doc.id,
+        ...userData
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting user:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get user',
+      details: error.message
+    });
+  }
 });
 
 exports.getUserList = onRequest(async (req, res) => {
