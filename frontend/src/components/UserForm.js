@@ -15,7 +15,8 @@ const UserForm = () => {
       message.success('User created successfully');
       form.resetFields();
     } catch (error) {
-      message.error(error.message);
+      console.error('Error creating user:', error);
+      message.error(`Failed to create user: ${error.message}`);
     } finally {
       setLoading(false);
     }

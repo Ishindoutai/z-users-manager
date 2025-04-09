@@ -6,21 +6,29 @@ const getUsers = httpsCallable(functions, 'getUsers');
 const updateUserPermissions = httpsCallable(functions, 'updateUserPermissions');
 const deleteUser = httpsCallable(functions, 'deleteUser');
 
+const handleError = (error) => {
+  // Extrai a mensagem de erro do Firebase Functions
+  const message = error.message || 
+                 error.details || 
+                 (error.code ? `Firebase error: ${error.code}` : 'Unknown error');
+  throw new Error(message);
+};
+
 export const createNewUser = async (userData) => {
   try {
     const result = await createUser(userData);
     return result.data;
   } catch (error) {
-    throw error;
+    handleError(error);
   }
 };
 
 export const fetchUsers = async () => {
   try {
     const result = await getUsers();
-    return result.data.users;
+    return result.data.users || [];
   } catch (error) {
-    throw error;
+    handleError(error);
   }
 };
 
@@ -29,7 +37,7 @@ export const updatePermissions = async (uid, permissions) => {
     const result = await updateUserPermissions({ uid, permissions });
     return result.data;
   } catch (error) {
-    throw error;
+    handleError(error);
   }
 };
 
@@ -38,6 +46,6 @@ export const removeUser = async (uid) => {
     const result = await deleteUser({ uid });
     return result.data;
   } catch (error) {
-    throw error;
+    handleError(error);
   }
 };

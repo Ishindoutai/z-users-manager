@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Popconfirm, message } from 'antd';
+import { Table, Tag, Popconfirm, message, Select, Button } from 'antd';
 import { fetchUsers, updatePermissions, removeUser } from '../services/usersAPI';
 import { auth } from '../firebase';
+
+const { Option } = Select;
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
@@ -10,10 +12,12 @@ const UserList = () => {
   useEffect(() => {
     const loadUsers = async () => {
       try {
+        setLoading(true);
         const usersData = await fetchUsers();
         setUsers(usersData);
       } catch (error) {
-        message.error('Failed to load users');
+        console.error('Error loading users:', error);
+        message.error(`Failed to load users: ${error.message}`);
       } finally {
         setLoading(false);
       }
@@ -30,7 +34,8 @@ const UserList = () => {
       ));
       message.success('Permissions updated successfully');
     } catch (error) {
-      message.error('Failed to update permissions');
+      console.error('Error updating permissions:', error);
+      message.error(`Failed to update permissions: ${error.message}`);
     }
   };
 
@@ -40,7 +45,8 @@ const UserList = () => {
       setUsers(users.filter(user => user.uid !== uid));
       message.success('User deleted successfully');
     } catch (error) {
-      message.error('Failed to delete user');
+      console.error('Error deleting user:', error);
+      message.error(`Failed to delete user: ${error.message}`);
     }
   };
 
