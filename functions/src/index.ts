@@ -4,12 +4,18 @@ import { handleCreateUser, handleGetUsers, handleUpdateUser } from './users/user
 
 admin.initializeApp();
 
-// Middleware CORS
-const corsHandler = async (req: functions.https.Request, res: functions.Response, handler: Function) => {
-  // Configuração CORS
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, POST');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
+const corsHandler = (handler: Function) => async (req: functions.https.Request, res: functions.Response) => {
+  // Configuração CORS mais segura
+  const allowedOrigins = ['http://localhost:3000']; // Adicione outros domínios se necessário
+  const origin = req.headers.origin || '';
+  
+  if (allowedOrigins.includes(origin)) {
+    res.set('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.set('Access-Control-Allow-Credentials', 'true');
 
   // Responde imediatamente para requisições OPTIONS
   if (req.method === 'OPTIONS') {
@@ -21,18 +27,10 @@ const corsHandler = async (req: functions.https.Request, res: functions.Response
     await handler(req, res);
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Internal Server Error' });
   }
 };
 
-export const createUser = functions.https.onRequest((req, res) => 
-  corsHandler(req, res, handleCreateUser)
-);
-
-export const getUsers = functions.https.onRequest((req, res) => 
-  corsHandler(req, res, handleGetUsers)
-);
-
-export const updateUser = functions.https.onRequest((req, res) => 
-  corsHandler(req, res, handleUpdateUser)
-);
+export const createUser = functions.https.onRequest(corsHandler(handleCreateUser));
+export const getUsers = functions.https.onRequest(corsHandler(handleGetUsers));
+export const updateUser = functions.https.onRequest(corsHandler(handleUpdateUser));
