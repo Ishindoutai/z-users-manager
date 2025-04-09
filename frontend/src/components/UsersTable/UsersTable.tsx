@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Table, Button, Popconfirm, Typography, message } from 'antd';
 import { User } from '../../types/user';
 import EditableCell from './EditableCell';
-import { updateUser } from '../../api/usersApi';
+import { UsersApi } from '../../api/usersApi';
 
 const { Text } = Typography;
 
@@ -13,28 +13,30 @@ interface UsersTableProps {
 }
 
 const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => {
-  const [form] = Form.useForm(); // Adicionado esta linha para criar a instância do form
+  const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState('');
 
   const isEditing = (record: User) => record.uid === editingKey;
 
   const edit = (record: User) => {
+    form.setFieldsValue({ 
+      permissions: record.permissions || [], // Apenas as permissões
+      uid: record.uid // Mantemos o uid para referência
+    });
     setEditingKey(record.uid);
   };
 
-  const cancel = () => {
-    setEditingKey('');
-  };
+  const cancel = () => setEditingKey('');
 
-  const save = async (uid: string, updatedPermissions: string[]) => {
+  const save = async (uid: string) => {
     try {
-      await updateUser(uid, updatedPermissions);
+      const row = await form.validateFields();
+      await UsersApi.update(uid, row.permissions);
       message.success('User updated successfully');
       setEditingKey('');
       onUpdate();
-    } catch (err: unknown) {
-      message.error('Error updating user');
-      console.error('Error updating user:', err);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : 'Failed to update user');
     }
   };
 
@@ -42,31 +44,27 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => 
     {
       title: 'Email',
       dataIndex: 'email',
-      key: 'email',
       render: (text: string) => <Text strong>{text}</Text>,
     },
     {
       title: 'Permissions',
       dataIndex: 'permissions',
-      key: 'permissions',
       editable: true,
       render: (permissions: string[] = []) => permissions.join(', '),
     },
     {
       title: 'Created At',
       dataIndex: 'createdAt',
-      key: 'createdAt',
       render: (date: string) => date ? new Date(date).toLocaleString() : '',
     },
     {
       title: 'Actions',
-      dataIndex: 'actions',
-      render: (_: unknown, record: User) => {
+      render: (_: any, record: User) => {
         const editable = isEditing(record);
         return editable ? (
-          <>
-            <Button
-              onClick={() => save(record.uid, record.permissions || [])}
+          <span>
+            <Button 
+              onClick={() => save(record.uid)} 
               style={{ marginRight: 8 }}
               size="small"
               type="primary"
@@ -76,7 +74,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => 
             <Popconfirm title="Cancel editing?" onConfirm={cancel}>
               <Button size="small">Cancel</Button>
             </Popconfirm>
-          </>
+          </span>
         ) : (
           <Button 
             disabled={editingKey !== ''} 
@@ -91,9 +89,8 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => 
   ];
 
   const mergedColumns = columns.map(col => {
-    if (!col.editable) {
-      return col;
-    }
+    if (!col.editable) return col;
+    
     return {
       ...col,
       onCell: (record: User) => ({
@@ -108,11 +105,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => 
   return (
     <Form form={form} component={false}>
       <Table
-        components={{
-          body: {
-            cell: EditableCell,
-          },
-        }}
+        components={{ body: { cell: EditableCell } }}
         bordered
         dataSource={users}
         columns={mergedColumns}

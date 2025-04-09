@@ -1,17 +1,20 @@
 import * as admin from 'firebase-admin';
 
-export interface UserCreateData {
+export interface UserCreateRequest {
   email: string;
   password: string;
   permissions: string[];
 }
 
-export interface UserUpdateData {
+export interface UserUpdateRequest {
+  uid: string;
   permissions: string[];
 }
 
-export interface User extends UserCreateData {
+export interface UserResponse {
   uid: string;
+  email: string;
+  permissions: string[];
   createdAt: admin.firestore.Timestamp;
   updatedAt?: admin.firestore.Timestamp;
 }

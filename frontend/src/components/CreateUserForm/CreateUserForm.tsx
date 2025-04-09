@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Select, message } from 'antd';
-import type { Rule } from 'antd/es/form';
+import { UsersApi } from '../../api/usersApi';
 import { UserCreateData } from '../../types/user';
-import { createUser } from '../../api/usersApi';
-import { validationSchema } from './validationSchema';
 
 const { Option } = Select;
+
+const permissionOptions = [
+  'admin',
+  'editor',
+  'viewer',
+  'manager',
+  'reports'
+];
 
 interface CreateUserFormProps {
   onSuccess: () => void;
@@ -18,51 +24,50 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
   const onFinish = async (values: UserCreateData) => {
     setLoading(true);
     try {
-      await createUser(values);
+      await UsersApi.create(values);
       message.success('User created successfully');
       form.resetFields();
       onSuccess();
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        message.error(error.message);
-      } else {
-        message.error('An unknown error occurred');
-      }
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : 'Failed to create user');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Form
-      form={form}
-      name="createUser"
-      onFinish={onFinish}
-      layout="vertical"
-      scrollToFirstError
-      autoComplete="off"
-    >
+    <Form form={form} onFinish={onFinish} layout="vertical">
       <Form.Item
         name="email"
         label="Email"
-        rules={validationSchema.email}
+        rules={[{ required: true, type: 'email', message: 'Please input a valid email!' }]}
       >
-        <Input placeholder="user@example.com" />
+        <Input />
       </Form.Item>
 
       <Form.Item
         name="password"
         label="Password"
-        rules={validationSchema.password}
+        rules={[{ required: true, min: 6, message: 'Password must be at least 6 characters' }]}
       >
-        <Input.Password placeholder="At least 6 characters" />
+        <Input.Password />
       </Form.Item>
 
       <Form.Item
         name="confirmPassword"
         label="Confirm Password"
         dependencies={['password']}
-        rules={validationSchema.confirmPassword}
+        rules={[
+          { required: true },
+          ({ getFieldValue }) => ({
+            validator(_, value) {
+              if (!value || getFieldValue('password') === value) {
+                return Promise.resolve();
+              }
+              return Promise.reject('The two passwords do not match!');
+            },
+          }),
+        ]}
       >
         <Input.Password />
       </Form.Item>
@@ -70,14 +75,12 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
       <Form.Item
         name="permissions"
         label="Permissions"
-        rules={validationSchema.permissions}
+        rules={[{ required: true, message: 'Please select at least one permission' }]}
       >
         <Select mode="multiple" placeholder="Select permissions">
-          <Option value="admin">Admin</Option>
-          <Option value="editor">Editor</Option>
-          <Option value="viewer">Viewer</Option>
-          <Option value="manager">Manager</Option>
-          <Option value="reports">Reports</Option>
+          {permissionOptions.map(perm => (
+            <Option key={perm} value={perm}>{perm}</Option>
+          ))}
         </Select>
       </Form.Item>
 

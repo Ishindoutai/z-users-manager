@@ -1,8 +1,24 @@
 import React from 'react';
 import { Form, Select } from 'antd';
-import { EditableCellProps } from '../../types/user';
+import { User } from '../../types/user';
 
 const { Option } = Select;
+
+interface EditableCellProps {
+  editing: boolean;
+  dataIndex: string;
+  title: string;
+  record: User;
+  children: React.ReactNode;
+}
+
+const permissionOptions = [
+  'admin',
+  'editor',
+  'viewer',
+  'manager',
+  'reports'
+];
 
 const EditableCell: React.FC<EditableCellProps> = ({
   editing,
@@ -12,43 +28,17 @@ const EditableCell: React.FC<EditableCellProps> = ({
   children,
   ...restProps
 }) => {
-  const permissionOptions = [
-    'admin',
-    'editor',
-    'viewer',
-    'manager',
-    'reports',
-  ];
-
-  const permissions = record?.permissions || [];
-
   return (
     <td {...restProps}>
       {editing ? (
         <Form.Item
           name={dataIndex}
           style={{ margin: 0 }}
-          initialValue={permissions}
-          rules={[
-            {
-              required: true,
-              message: `${title} is required.`,
-            },
-            {
-              validator: (_, value) => {
-                if (value && value.length === 0) {
-                  return Promise.reject(new Error('At least one permission is required'));
-                }
-                return Promise.resolve();
-              },
-            },
-          ]}
+          rules={[{ required: true, message: `Please input ${title}!` }]}
         >
           <Select mode="multiple" style={{ width: '100%' }}>
             {permissionOptions.map(perm => (
-              <Option key={perm} value={perm}>
-                {perm}
-              </Option>
+              <Option key={perm} value={perm}>{perm}</Option>
             ))}
           </Select>
         </Form.Item>
