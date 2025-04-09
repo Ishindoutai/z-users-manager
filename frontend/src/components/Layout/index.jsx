@@ -4,6 +4,7 @@ import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import { auth } from '../../firebase';
 import { signOut } from 'firebase/auth';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { useEffect } from 'react'; // Add this import
 
 const { Header, Content, Sider } = Layout;
 const { Text } = Typography;
@@ -23,6 +24,13 @@ const MainLayout = () => {
       console.error('Logout error:', error);
     }
   };
+
+  // Move the navigation logic to useEffect
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login');
+    }
+  }, [user, loading, navigate]);
 
   const items = [
     {
@@ -56,8 +64,7 @@ const MainLayout = () => {
   }
 
   if (!user) {
-    navigate('/login');
-    return null;
+    return null; // The navigation will be handled by useEffect
   }
 
   return (

@@ -4,6 +4,7 @@ import MainLayout from './components/Layout';
 import UsersPage from './pages/Users';
 import LoginPage from './pages/Login';
 import DashboardPage from './pages/Dashboard';
+import { App as AntdApp } from 'antd';
 
 function App() {
   return (
@@ -14,15 +15,17 @@ function App() {
         },
       }}
     >
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/*" element={<MainLayout />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="users" element={<UsersPage />} />
-          </Route>
-        </Routes>
-      </Router>
+      <AntdApp>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/*" element={<MainLayout />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="users" element={<UsersPage />} />
+            </Route>
+          </Routes>
+        </Router>
+      </AntdApp>
     </ConfigProvider>
   );
 }

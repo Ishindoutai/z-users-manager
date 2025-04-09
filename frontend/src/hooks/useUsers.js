@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import api from '../services/api';
+import { message } from 'antd';
 
 const useUsers = () => {
   const [users, setUsers] = useState([]);
@@ -12,8 +13,11 @@ const useUsers = () => {
       const data = await api.get('/users');
       setUsers(data);
       setError(null);
+      return data;
     } catch (err) {
       setError(err.message);
+      message.error('Failed to fetch users');
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -21,19 +25,23 @@ const useUsers = () => {
 
   const createUser = async (userData) => {
     try {
-      await api.post('/users', userData);
+      const newUser = await api.post('/users', userData);
       await fetchUsers();
+      return newUser;
     } catch (err) {
-      throw new Error('Failed to create user');
+      message.error('Failed to create user');
+      throw err;
     }
   };
 
   const updateUser = async (id, userData) => {
     try {
-      await api.put(`/users/${id}`, userData);
+      const updatedUser = await api.put(`/users/${id}`, userData);
       await fetchUsers();
+      return updatedUser;
     } catch (err) {
-      throw new Error('Failed to update user');
+      message.error('Failed to update user');
+      throw err;
     }
   };
 
@@ -41,8 +49,10 @@ const useUsers = () => {
     try {
       await api.delete(`/users/${id}`);
       await fetchUsers();
+      message.success('User deleted successfully');
     } catch (err) {
-      throw new Error('Failed to delete user');
+      message.error('Failed to delete user');
+      throw err;
     }
   };
 

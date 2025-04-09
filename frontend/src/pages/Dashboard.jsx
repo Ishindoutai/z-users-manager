@@ -4,6 +4,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase';
 import { useEffect, useState } from 'react';
 import { getUsersCount } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
 
@@ -15,8 +16,14 @@ const DashboardPage = () => {
     adminsCount: 0,
   });
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
     const fetchStats = async () => {
       try {
         const count = await getUsersCount();
@@ -33,7 +40,9 @@ const DashboardPage = () => {
     };
 
     fetchStats();
-  }, []);
+  }, [user, navigate]);
+
+  if (!user) return null;
 
   return (
     <div>
@@ -41,14 +50,14 @@ const DashboardPage = () => {
         Dashboard
       </Title>
       <Title level={4} style={{ marginBottom: 24 }}>
-        Bem-vindo, {user?.email}
+        Welcome, {user.email}
       </Title>
 
       <Row gutter={16}>
         <Col span={8}>
           <Card>
             <Statistic
-              title="Total de Usuários"
+              title="Total Users"
               value={stats.usersCount}
               prefix={<TeamOutlined />}
               loading={loading}
@@ -58,7 +67,7 @@ const DashboardPage = () => {
         <Col span={8}>
           <Card>
             <Statistic
-              title="Usuários Ativos"
+              title="Active Users"
               value={stats.activeUsers}
               prefix={<UserOutlined />}
               loading={loading}
@@ -68,20 +77,11 @@ const DashboardPage = () => {
         <Col span={8}>
           <Card>
             <Statistic
-              title="Administradores"
+              title="Administrators"
               value={stats.adminsCount}
               prefix={<LockOutlined />}
               loading={loading}
             />
-          </Card>
-        </Col>
-      </Row>
-
-      <Row gutter={16} style={{ marginTop: 16 }}>
-        <Col span={24}>
-          <Card title="Atividades Recentes" style={{ marginTop: 16 }}>
-            <p>Últimos usuários criados</p>
-            <p>Atividades do sistema</p>
           </Card>
         </Col>
       </Row>

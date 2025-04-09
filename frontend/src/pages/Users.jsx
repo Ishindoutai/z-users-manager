@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button, message } from 'antd';
+import { Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import UserTable from '../components/Users/UserTable';
 import UserForm from '../components/Users/UserForm';
@@ -8,17 +8,18 @@ import useUsers from '../hooks/useUsers';
 const UsersPage = () => {
   const [formVisible, setFormVisible] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const { users, loading, error, fetchUsers, createUser, updateUser, deleteUser } = useUsers();
+  const { 
+    users, 
+    loading, 
+    fetchUsers, 
+    createUser, 
+    updateUser, 
+    deleteUser 
+  } = useUsers();
 
   useEffect(() => {
     fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    if (error) {
-      message.error(error);
-    }
-  }, [error]);
+  }, [fetchUsers]);
 
   const handleCreate = () => {
     setEditingUser(null);
@@ -34,22 +35,24 @@ const UsersPage = () => {
     try {
       if (editingUser) {
         await updateUser(editingUser.id, values);
-        message.success('User updated successfully');
       } else {
         await createUser(values);
-        message.success('User created successfully');
       }
       setFormVisible(false);
-      fetchUsers();
-    } catch (err) {
-      message.error('Failed to save user');
+    } catch (error) {
+      console.error('Error saving user:', error);
     }
   };
 
   return (
     <div>
       <div style={{ marginBottom: 16 }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={handleCreate}
+          loading={loading}
+        >
           Add User
         </Button>
       </div>
