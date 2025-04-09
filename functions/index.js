@@ -219,3 +219,56 @@ exports.updateUserById = onRequest(async (req, res) => {
     });
   }
 });
+
+exports.deleteUserById = onRequest(async (req, res) => {
+  try {
+    // Verifica o método HTTP
+    if (req.method !== 'DELETE') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Obtém o ID do usuário
+    const userId = req.params.userId || req.query.userId;
+    
+    if (!userId) {
+      return res.status(400).json({ 
+        error: 'User ID is required' 
+      });
+    }
+
+    // Verifica se o usuário existe antes de deletar
+    const userRef = db.collection("users").doc(userId);
+    const doc = await userRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ 
+        error: 'User not found' 
+      });
+    }
+
+    // Obtém dados do usuário (para retorno antes de deletar)
+    const userData = doc.data();
+    delete userData.password;
+
+    // Realiza a exclusão
+    await userRef.delete();
+
+    res.status(200).json({
+      success: true,
+      message: 'User deleted successfully',
+      deletedUser: {
+        id: doc.id,
+        ...userData
+      },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete user',
+      details: error.message
+    });
+  }
+});
