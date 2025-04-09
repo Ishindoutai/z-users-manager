@@ -20,6 +20,12 @@ exports.createUser = onRequest(async (req, res) => {
 
 });
 
+exports.getUserList = onRequest(async (req, res) => {
+  const userList = await getFirestore().collection("users").get()
+
+  res.json({userList: userList})
+});
+
 // Take the text parameter passed to this HTTP endpoint and insert it into
 // Firestore under the path /messages/:documentId/original
 exports.addmessage = onRequest(async (req, res) => {
