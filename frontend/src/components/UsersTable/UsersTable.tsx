@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, Button, Popconfirm, Typography, message } from 'antd';
+import { Form, Table, Button, Popconfirm, Typography, message } from 'antd';
 import { User } from '../../types/user';
 import EditableCell from './EditableCell';
 import { updateUser } from '../../api/usersApi';
@@ -13,6 +13,7 @@ interface UsersTableProps {
 }
 
 const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => {
+  const [form] = Form.useForm(); // Adicionado esta linha para criar a instância do form
   const [editingKey, setEditingKey] = useState('');
 
   const isEditing = (record: User) => record.uid === editingKey;
@@ -105,21 +106,23 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, loading, onUpdate }) => 
   });
 
   return (
-    <Table
-      components={{
-        body: {
-          cell: EditableCell,
-        },
-      }}
-      bordered
-      dataSource={users}
-      columns={mergedColumns}
-      rowClassName="editable-row"
-      pagination={{ pageSize: 10 }}
-      loading={loading}
-      rowKey="uid"
-      scroll={{ x: true }}
-    />
+    <Form form={form} component={false}>
+      <Table
+        components={{
+          body: {
+            cell: EditableCell,
+          },
+        }}
+        bordered
+        dataSource={users}
+        columns={mergedColumns}
+        rowClassName="editable-row"
+        pagination={{ pageSize: 10 }}
+        loading={loading}
+        rowKey="uid"
+        scroll={{ x: true }}
+      />
+    </Form>
   );
 };
 

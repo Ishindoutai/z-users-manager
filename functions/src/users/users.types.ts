@@ -7,11 +7,11 @@ export interface UserCreateData {
 }
 
 export interface UserUpdateData {
-  permissions?: string[];
+  permissions: string[];
 }
 
 export interface User extends UserCreateData {
   uid: string;
-  createdAt?: admin.firestore.Timestamp;
+  createdAt: admin.firestore.Timestamp;
   updatedAt?: admin.firestore.Timestamp;
 }

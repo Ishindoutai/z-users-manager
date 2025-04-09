@@ -1,60 +1,69 @@
-import { Request, Response } from 'express';
+import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { createUser, getUsers, updateUser } from './users.service';
+import { UserCreateData, UserUpdateData } from './users.types';
 
-export const handleCreateUser = async (req: Request, res: Response) => {
-  try {
-    const userData = req.body;
-    
-    const userRecord = await admin.auth().createUser({
-      email: userData.email,
-      password: userData.password,
-    });
-    
-    await admin.firestore().collection('users').doc(userRecord.uid).set({
-      email: userData.email,
-      permissions: userData.permissions,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-    
-    res.status(201).json({
-      uid: userRecord.uid,
-      email: userData.email,
-      permissions: userData.permissions,
-    });
-  } catch (error) {
-    console.error('Create User Error:', error);
-    res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to create user' });
-  }
+admin.initializeApp();
+
+// Helper para tratamento de erros
+const handleError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : 'Unknown error';
+  functions.logger.error(message, error);
+  throw new functions.https.HttpsError('internal', message);
 };
 
-export const handleGetUsers = async (req: Request, res: Response) => {
+// Criação de usuário
+export const userCreate = functions.https.onCall(async (data: UserCreateData, context) => {
   try {
-    const snapshot = await admin.firestore().collection('users').get();
-    const users = snapshot.docs.map(doc => ({
-      uid: doc.id,
-      ...doc.data(),
-    }));
-    res.status(200).json(users);
-  } catch (error) {
-    console.error('Get Users Error:', error);
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to fetch users' });
-  }
-};
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
+    }
+    
+    if (!data.email || !data.password) {
+      throw new functions.https.HttpsError('invalid-argument', 'Email and password are required');
+    }
 
-export const handleUpdateUser = async (req: Request, res: Response) => {
-  try {
-    const { uid } = req.params;
-    const userData = req.body;
-    
-    await admin.firestore().collection('users').doc(uid).update(userData);
-    const updatedDoc = await admin.firestore().collection('users').doc(uid).get();
-    
-    res.status(200).json({
-      uid,
-      ...updatedDoc.data(),
-    });
+    return await createUser(data);
   } catch (error) {
-    console.error('Update User Error:', error);
-    res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to update user' });
+    return handleError(error);
   }
-};
+});
+
+// Listagem de usuários
+export const userList = functions.https.onCall(async (_, context) => {
+  try {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
+    }
+    
+    // Exemplo de verificação de permissão
+    // if (!context.auth.token.admin) {
+    //   throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+    // }
+
+    return await getUsers();
+  } catch (error) {
+    return handleError(error);
+  }
+});
+
+// Atualização de usuário
+export const userUpdate = functions.https.onCall(async ({ uid, ...data }: { uid: string } & UserUpdateData, context) => {
+  try {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Authentication required');
+    }
+
+    if (!uid) {
+      throw new functions.https.HttpsError('invalid-argument', 'User ID is required');
+    }
+
+    if (!data.permissions) {
+      throw new functions.https.HttpsError('invalid-argument', 'Permissions are required');
+    }
+
+    return await updateUser(uid, data);
+  } catch (error) {
+    return handleError(error);
+  }
+});
