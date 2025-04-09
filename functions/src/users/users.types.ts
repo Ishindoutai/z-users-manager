@@ -18,3 +18,12 @@ export interface UserResponse {
   createdAt: admin.firestore.Timestamp;
   updatedAt?: admin.firestore.Timestamp;
 }
+
+export interface AuthContext {
+  auth?: {
+    uid: string;
+    token: {
+      [key: string]: any;
+    };
+  };
+}
