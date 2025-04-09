@@ -1,4 +1,16 @@
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-export.json
+
+# Node
 node_modules/
 lib/
-.firebase
 *.log
+
+# IDE
+.vscode/
+.idea/
+
+# Test
+coverage/
