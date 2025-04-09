@@ -9,6 +9,17 @@ const {getFirestore} = require("firebase-admin/firestore");
 
 initializeApp();
 
+exports.createUser = onRequest(async (req, res) => {
+  const { email, password, permissions } = req.query.data;
+
+  const writeResult = await getFirestore()
+                            .collection("users")
+                            .add({email: email, password: password, permissions: permissions})
+  
+  res.json({result: `User with ID: ${writeResult.id} created.`})
+
+});
+
 // Take the text parameter passed to this HTTP endpoint and insert it into
 // Firestore under the path /messages/:documentId/original
 exports.addmessage = onRequest(async (req, res) => {
