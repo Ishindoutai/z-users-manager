@@ -1,37 +1,26 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import UserListTable from './components/UserListTable'
+import { ConfigProvider } from 'antd';
+import ptBR from 'antd/locale/pt_BR';
+import UserListTable from './components/UserListTable';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <ConfigProvider
+      locale={ptBR}
+      theme={{
+        token: {
+          colorPrimary: '#1890ff',
+          borderRadius: 4,
+          colorBgContainer: '#ffffff',
+        },
+      }}
+    >
+      <div className="app-container">
+        <h1 className="app-title">Gerenciamento de Usuários</h1>
+        <UserListTable />
       </div>
-      <UserListTable/>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </ConfigProvider>
+  );
 }
 
-export default App
+export default App;
