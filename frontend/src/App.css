@@ -2,7 +2,7 @@
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
+  text-align: left; /* Alterado para manter alinhamento natural dos componentes */
 }
 
 .logo {
@@ -39,4 +39,27 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Adicionado para melhorar aparência da tabela e dos botões */
+.ant-table {
+  margin-top: 16px;
+}
+
+.ant-btn {
+  font-weight: 500;
+}
+
+.ant-modal .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.ant-tag {
+  margin-bottom: 4px;
+}
+
+@media (max-width: 768px) {
+  .ant-table-wrapper {
+    overflow-x: auto;
+  }
 }

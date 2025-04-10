@@ -1,422 +1,229 @@
-import React, { useState, useEffect } from 'react';
-import { EditableProTable } from '@ant-design/pro-components';
-import { Input, Tag, message, Popconfirm, Button, Form, Modal } from 'antd';
+
+import React, { useEffect, useState } from 'react';
+import { Table, Button, Modal, Form, Input, Checkbox, Tag, Popconfirm, App } from 'antd';
+
+const { useApp } = App;
+const CheckboxGroup = Checkbox.Group;
+
+const AVAILABLE_PERMISSIONS = ['admin', 'editor', 'viewer', 'manager', 'reporter'];
+
+const CreateUserModal = ({ visible, onCancel, onCreate, loading, form }) => (
+  <Modal
+    title="Adicionar Novo Usuário"
+    open={visible}
+    onOk={onCreate}
+    onCancel={onCancel}
+    confirmLoading={loading}
+    okText="Criar"
+    cancelText="Cancelar"
+  >
+    <Form form={form} layout="vertical">
+      <Form.Item name="email" label="Email" rules={[
+        { required: true, message: 'Por favor, insira o email' },
+        { type: 'email', message: 'Por favor, insira um email válido' }
+      ]}>
+        <Input placeholder="exemplo@email.com" />
+      </Form.Item>
+      <Form.Item name="password" label="Senha" rules={[
+        { required: true, message: 'Por favor, insira a senha' },
+        { min: 6, message: 'A senha deve ter pelo menos 6 caracteres' }
+      ]}>
+        <Input.Password placeholder="Digite a senha" />
+      </Form.Item>
+      <Form.Item name="permissions" label="Permissões">
+        <CheckboxGroup options={AVAILABLE_PERMISSIONS} />
+      </Form.Item>
+    </Form>
+  </Modal>
+);
 
 export default function UserListTable() {
+  const { message } = useApp();
   const [userList, setUserList] = useState([]);
-  const [editableKeys, setEditableKeys] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tempData, setTempData] = useState({});
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
   const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
-  // Função para criar novo usuário
-  async function createUser(userData) {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        "http://127.0.0.1:5001/z-users-manager/us-central1/createUser",
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: userData.email,
-            password: userData.password,
-            permissions: userData.permissions || []
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Erro ao criar usuário');
-      }
-
-      const data = await response.json();
-      message.success('Usuário criado com sucesso');
-      return data;
-    } catch (error) {
-      console.error('Error creating user:', error);
-      message.error('Falha ao criar usuário');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // Função para lidar com a criação de novo usuário
-  const handleCreateUser = async () => {
-    try {
-      const values = await form.validateFields();
-      const newUser = await createUser({
-        email: values.email,
-        password: values.password,
-        permissions: values.permissions ? values.permissions.split(',').map(p => p.trim()) : []
+  const api = {
+    createUser: async (userData) => {
+      const res = await fetch("http://127.0.0.1:5001/z-users-manager/us-central1/createUser", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
       });
-
-      // Atualiza a lista de usuários
-      setUserList(prev => [
-        ...prev,
-        {
-          id: newUser.userId,
-          email: newUser.email,
-          permissions: newUser.permissions || [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      ]);
-
-      setIsModalVisible(false);
-      form.resetFields();
-    } catch (error) {
-      console.error('Validation failed:', error);
-    }
-  };
-
-  // Adicionar ao JSX o botão e modal de criação
-  const renderCreateButton = () => (
-    <Button 
-      type="primary" 
-      onClick={() => setIsModalVisible(true)}
-      style={{ marginBottom: 16 }}
-    >
-      Adicionar Usuário
-    </Button>
-  );
-
-  // Modal de criação de usuário
-  const renderCreateModal = () => (
-    <Modal
-      title="Adicionar Novo Usuário"
-      open={isModalVisible}
-      onOk={handleCreateUser}
-      onCancel={() => {
-        setIsModalVisible(false);
-        form.resetFields();
-      }}
-      confirmLoading={loading}
-    >
-      <Form form={form} layout="vertical">
-        <Form.Item
-          name="email"
-          label="Email"
-          rules={[
-            { required: true, message: 'Por favor, insira o email' },
-            { type: 'email', message: 'Por favor, insira um email válido' }
-          ]}
-        >
-          <Input placeholder="exemplo@email.com" />
-        </Form.Item>
-        <Form.Item
-          name="password"
-          label="Senha"
-          rules={[
-            { required: true, message: 'Por favor, insira a senha' },
-            { min: 6, message: 'A senha deve ter pelo menos 6 caracteres' }
-          ]}
-        >
-          <Input.Password placeholder="Digite a senha" />
-        </Form.Item>
-        <Form.Item
-          name="permissions"
-          label="Permissões (separadas por vírgula)"
-        >
-          <Input placeholder="admin, editor, viewer" />
-        </Form.Item>
-      </Form>
-    </Modal>
-  );
-
-  // Função para buscar os usuários
-  async function getUserList() {
-    try {
-      setLoading(true);
-      const response = await fetch("http://127.0.0.1:5001/z-users-manager/us-central1/getUserList");
-      
-      if (!response.ok) {
-        throw new Error('Erro na requisição');
-      }
-      
-      const data = await response.json();
-      
-      const formattedUsers = data.users.map(user => ({
+      if (!res.ok) throw new Error((await res.json()).message || 'Erro ao criar usuário');
+      return res.json();
+    },
+    getUserById: async (userId) => {
+      const res = await fetch(`http://127.0.0.1:5001/z-users-manager/us-central1/getUserById?userId=${userId}`);
+      if (!res.ok) throw new Error((await res.json()).message || 'Erro ao buscar usuário');
+      const data = await res.json();
+      return {
+        id: data.user.id,
+        email: data.user.email,
+        permissions: data.user.permissions || [],
+        createdAt: data.user.createdAt,
+        updatedAt: data.user.updatedAt || data.user.createdAt
+      };
+    },
+    getUserList: async () => {
+      const res = await fetch("http://127.0.0.1:5001/z-users-manager/us-central1/getUserList");
+      if (!res.ok) throw new Error((await res.json()).message || 'Erro ao buscar usuários');
+      const data = await res.json();
+      return data.users.map(user => ({
         id: user.id,
         email: user.data.email,
         permissions: user.data.permissions || [],
         createdAt: user.data.createdAt,
-        updatedAt: user.data.updatedAt
+        updatedAt: user.data.updatedAt || user.data.createdAt
       }));
-      
-      setUserList(formattedUsers);
-    } catch (error) {
-      console.error('Error fetching user list:', error);
-      message.error('Falha ao carregar lista de usuários');
-    } finally {
-      setLoading(false);
+    },
+    updateUser: async (userId, data) => {
+      const res = await fetch(`http://127.0.0.1:5001/z-users-manager/us-central1/updateUserById?userId=${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error((await res.json()).message || 'Erro ao atualizar usuário');
+    },
+    deleteUserById: async (userId) => {
+      const res = await fetch(`http://127.0.0.1:5001/z-users-manager/us-central1/deleteUserById?userId=${userId}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error((await res.json()).message || 'Erro ao remover usuário');
     }
-  }
-
-  // Função para atualizar usuário no backend
-  async function updateUser(userId, userData) {
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:5001/z-users-manager/us-central1/updateUserById?userId=${userId}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: userData.email,
-            permissions: userData.permissions
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Erro ao atualizar usuário');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating user:', error);
-      throw error;
-    }
-  }
-
-  // Função para deletar usuário no backend
-  async function deleteUserById(userId) {
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:5001/z-users-manager/us-central1/deleteUserById?userId=${userId}`,
-        {
-          method: 'DELETE',
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Erro ao deletar usuário');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      throw error;
-    }
-  }
+  };
 
   useEffect(() => {
-    getUserList();
+    api.getUserList().then(setUserList).catch(err => message.error(err.message)).finally(() => setLoading(false));
   }, []);
 
-  // Colunas da tabela
+  const handleCreateUser = async () => {
+    try {
+      setCreateLoading(true);
+      const values = await form.validateFields();
+      const res = await api.createUser(values);
+      const newUser = await api.getUserById(res.userId);
+      setUserList(prev => [...prev, newUser]);
+      message.success('Usuário criado com sucesso');
+      form.resetFields();
+      setIsModalVisible(false);
+    } catch (error) {
+      message.error(error.message);
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    editForm.setFieldsValue(user);
+    setEditModalVisible(true);
+  };
+
+  const handleUpdateUser = async () => {
+    try {
+      const values = await editForm.validateFields();
+      await api.updateUser(editingUser.id, values);
+      message.success('Usuário atualizado');
+      const updated = await api.getUserList();
+      setUserList(updated);
+      setEditModalVisible(false);
+    } catch (error) {
+      message.error(error.message);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    try {
+      await api.deleteUserById(userId);
+      message.success('Usuário removido');
+      setUserList(await api.getUserList());
+    } catch (error) {
+      message.error(error.message);
+    }
+  };
+
   const columns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      editable: false,
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
-      formItemProps: {
-        rules: [
-          { required: true, message: 'Email é obrigatório' },
-          { type: 'email', message: 'Por favor, insira um email válido' },
-        ],
-      },
-      renderFormItem: (_, { record }) => (
-        <Input placeholder="Digite o email" />
-      ),
-    },
+    { title: 'ID', dataIndex: 'id', width: 100 },
+    { title: 'Email', dataIndex: 'email' },
     {
       title: 'Permissões',
       dataIndex: 'permissions',
-      key: 'permissions',
-      valueType: 'tags',
-      render: (_, record) => (
-        <>
-          {record.permissions?.map((permission) => (
-            <Tag key={permission}>{permission}</Tag>
-          ))}
-        </>
-      ),
-      renderFormItem: (_, { record, value, onChange }) => (
-        <Input
-          placeholder="Digite as permissões separadas por vírgula"
-          value={value?.join(',')}
-          onChange={(e) => {
-            const newPermissions = e.target.value
-              .split(',')
-              .map(item => item.trim())
-              .filter(item => item);
-            onChange(newPermissions);
-          }}
-        />
-      ),
+      render: (permissions) => {
+        const safePermissions = Array.isArray(permissions) ? permissions : [];
+        return safePermissions.length > 0
+          ? safePermissions.map(p => <Tag key={p}>{p}</Tag>)
+          : <Tag color="default">Nenhuma</Tag>;
+      }      
     },
-    {
-      title: 'Criado em',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      valueType: 'date',
-      editable: false,
-    },
-    {
-      title: 'Atualizado em',
-      dataIndex: 'updatedAt',
-      key: 'updatedAt',
-      valueType: 'date',
-      editable: false,
-    },
+    { title: 'Criado em', dataIndex: 'createdAt' },
+    { title: 'Atualizado em', dataIndex: 'updatedAt' },
     {
       title: 'Ações',
-      valueType: 'option',
-      render: (text, record, _, action) => [
-        <Button
-          type="default"
-          key="editable"
-          onClick={() => {
-            setTempData(record); // Salva os dados atuais antes de editar
-            action?.startEditable?.(record.id);
-          }}
-        >
-          Editar
-        </Button>,
-      ],
-    },
+      render: (_, record) => (
+        <>
+          <Button type="link" onClick={() => handleEditUser(record)}>Editar</Button>
+          <Popconfirm
+            title="Tem certeza que deseja excluir este usuário?"
+            onConfirm={() => handleDeleteUser(record.id)}
+            okText="Sim"
+            cancelText="Não"
+          >
+            <Button type="link" danger>Excluir</Button>
+          </Popconfirm>
+        </>
+      )
+    }
   ];
-
-  // Configurações de edição
-  const editableConfig = {
-    type: 'single',
-    editableKeys,
-    onChange: setEditableKeys,
-    onSave: async (key, row) => {
-      try {
-        setLoading(true);
-        // Envia a requisição para o backend primeiro
-        await updateUser(key, row);
-        
-        // Atualiza o state local apenas se a requisição for bem-sucedida
-        setUserList(prev => prev.map(user => 
-          user.id === key ? { ...user, ...row, updatedAt: new Date().toISOString() } : user
-        ));
-        
-        message.success('Usuário atualizado com sucesso');
-      } catch (error) {
-        console.error('Error:', error);
-        message.error('Falha ao atualizar usuário');
-      } finally {
-        setLoading(false);
-      }
-    },
-    onCancel: async (key) => {
-      // Não faz nada, apenas sai do modo de edição
-      console.log('Edição cancelada para o usuário:', key);
-    },
-    onDelete: async (key, row) => {
-      try {
-        setLoading(true);
-        // Chama a função para deletar o usuário no backend
-        await deleteUserById(key);
-        
-        // Atualiza o state local apenas se a requisição for bem-sucedida
-        setUserList(prev => prev.filter(user => user.id !== key));
-        
-        message.success('Usuário removido com sucesso');
-      } catch (error) {
-        console.error('Error:', error);
-        message.error('Falha ao remover usuário');
-      } finally {
-        setLoading(false);
-      }
-    },
-    actionRender: (row, config, defaultDom) => [
-      <Button 
-        key="save" 
-        type="primary"
-        onClick={async () => {
-          try {
-            setLoading(true);
-            await config.onSave(row.id, row);
-          } finally {
-            setLoading(false);
-          }
-        }}
-      >
-        Salvar
-      </Button>,
-      <Button 
-        key="cancel" 
-        style={{ marginLeft: 8 }}
-        onClick={() => {
-          config.onCancel(row.id);
-          setEditableKeys([]);
-        }}
-      >
-        Cancelar
-      </Button>,
-      <Popconfirm
-        key="delete"
-        title="Tem certeza que deseja excluir este usuário?"
-        onConfirm={async () => {
-          try {
-            await config.onDelete(row.id, row);
-          } catch (error) {
-            console.error('Error:', error);
-          }
-        }}
-        okText="Sim"
-        cancelText="Não"
-      >
-        <Button danger style={{ marginLeft: 8 }}>
-          Excluir
-        </Button>
-      </Popconfirm>,
-    ],
-  };
 
   return (
     <div style={{ padding: 24 }}>
-      {renderCreateButton()}
-      {renderCreateModal()}
-      <EditableProTable
+      <Button type="primary" onClick={() => setIsModalVisible(true)} style={{ marginBottom: 16 }}>
+        Adicionar Usuário
+      </Button>
+
+      <CreateUserModal
+        visible={isModalVisible}
+        onCancel={() => { setIsModalVisible(false); form.resetFields(); }}
+        onCreate={handleCreateUser}
+        loading={createLoading}
+        form={form}
+      />
+
+      <Modal
+        title="Editar Usuário"
+        open={editModalVisible}
+        onCancel={() => setEditModalVisible(false)}
+        onOk={handleUpdateUser}
+        okText="Salvar"
+      >
+        <Form form={editForm} layout="vertical">
+          <Form.Item name="email" label="Email" rules={[{ required: true }, { type: 'email' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="permissions" label="Permissões">
+            <CheckboxGroup options={AVAILABLE_PERMISSIONS} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Table
         columns={columns}
         rowKey="id"
-        value={userList}
+        dataSource={userList}
         loading={loading}
-        search={false}
         pagination={{
           pageSize: 10,
-          showSizeChanger: false,
           showTotal: (total) => `Total de ${total} usuários`,
         }}
-        recordCreatorProps={false}
-        editable={editableConfig}
-        onChange={setUserList}
         locale={{
-          filterConfirm: 'OK',
-          filterReset: 'Resetar',
           emptyText: 'Nenhum usuário encontrado',
-          editableTable: {
-            action: {
-              save: 'Salvar',
-              cancel: 'Cancelar',
-              delete: 'Excluir',
-              add: 'Adicionar',
-            },
-          },
         }}
-        options={{
-          reload: () => getUserList(),
-          setting: false,
-          density: false,
-        }}
-        headerTitle="Lista de Usuários"
       />
     </div>
   );
